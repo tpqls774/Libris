@@ -6,6 +6,7 @@ import {
   Bell,
 } from "lucide-react";
 import { requestNotificationPermission } from "../../utils/notifications";
+import { saveInAppNotification } from "../../utils/notifications";
 
 export default function SettingsPage() {
   // 프로필 설정
@@ -202,6 +203,45 @@ export default function SettingsPage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* 계정 초기화 */}
+        <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <User className="w-5 h-5 text-red-400" />
+            <h2 className="text-base font-medium text-red-600">계정 초기화</h2>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            모든 독서 데이터(책장, 감상문, 설정 등)를 완전히 삭제합니다. <br />
+            <span className="text-red-500 font-semibold">이 작업은 되돌릴 수 없습니다!</span>
+          </p>
+          <button
+            onClick={() => {
+              if (window.confirm("정말로 모든 데이터를 삭제하고 초기화하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) {
+                // 관련 localStorage 키 삭제
+                [
+                  "bookshelf_books",
+                  "bookshelf_notes",
+                  "bookshelf_intro",
+                  "bookshelf_monthlyGoal",
+                  "bookshelf_yearlyGoal",
+                  "bookshelf_notifications",
+                  "bookshelf_theme",
+                  "bookshelf_last_backup",
+                  "bookshelf_inapp_notifications"
+                ].forEach(key => localStorage.removeItem(key));
+                saveInAppNotification({
+                  type: "reset",
+                  title: "계정 초기화 완료",
+                  body: "계정 데이터가 모두 삭제되었습니다.",
+                });
+                window.location.href = "/";
+              }
+            }}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition"
+          >
+            계정 초기화
+          </button>
         </div>
       </div>
     </main>

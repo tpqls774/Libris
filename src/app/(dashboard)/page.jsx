@@ -208,6 +208,7 @@ export default function Home() {
   const username = "tpqls774";
   const [addLoading, setAddLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [showResetToast, setShowResetToast] = useState(false);
 
   const { todayBook, loading } = useTodayBook();
   const {
@@ -223,6 +224,12 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
+    // 계정 초기화 안내 메시지
+    if (typeof window !== "undefined" && localStorage.getItem("libris_reset")) {
+      setShowResetToast(true);
+      localStorage.removeItem("libris_reset");
+      setTimeout(() => setShowResetToast(false), 3000);
+    }
   }, []);
 
   // 오늘의 추천 도서 책장에 추가
@@ -381,6 +388,12 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {showResetToast && (
+        <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-center font-medium">
+          계정 데이터가 초기화되었습니다.
+        </div>
+      )}
     </main>
   );
 }
