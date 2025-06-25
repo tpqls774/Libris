@@ -205,7 +205,7 @@ function NotePreview({ note }) {
 }
 
 export default function Home() {
-  const username = "tpqls774";
+  const [username, setUsername] = useState("tpqls774");
   const [addLoading, setAddLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showResetToast, setShowResetToast] = useState(false);
@@ -224,6 +224,11 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
+    // 닉네임 불러오기
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("bookshelf_nickname");
+      if (stored) setUsername(stored);
+    }
     // 계정 초기화 안내 메시지
     if (typeof window !== "undefined" && localStorage.getItem("libris_reset")) {
       setShowResetToast(true);

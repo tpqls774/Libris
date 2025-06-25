@@ -128,7 +128,7 @@ export default function Profile() {
   const [notes, setNotes] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [avgRating, setAvgRating] = useState(0);
-  const username = "tpqls774";
+  const [nickname, setNickname] = useState("tpqls774");
   const joinDate = "2024-01-01";
   const [intro, setIntro] = useState("독서를 사랑하는 개발자입니다.");
   const [avatar, setAvatar] = useState("");
@@ -149,7 +149,9 @@ export default function Profile() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setMonthlyGoal(Number(localStorage.getItem("bookshelf_monthlyGoal")) || 15);
+      setMonthlyGoal(
+        Number(localStorage.getItem("bookshelf_monthlyGoal")) || 15
+      );
       setYearlyGoal(Number(localStorage.getItem("bookshelf_yearlyGoal")) || 50);
 
       const storedBooks = localStorage.getItem("bookshelf_books");
@@ -157,12 +159,21 @@ export default function Profile() {
       const storedNotes = localStorage.getItem("bookshelf_notes");
       if (storedNotes) setNotes(JSON.parse(storedNotes));
 
-      setIntro(localStorage.getItem("bookshelf_intro") || "독서를 사랑하는 개발자입니다.");
+      setIntro(
+        localStorage.getItem("bookshelf_intro") ||
+          "독서를 사랑하는 개발자입니다."
+      );
 
       let activities = [];
       if (storedNotes) {
-        const sortedNotes = JSON.parse(storedNotes).sort((a, b) => b.date.localeCompare(a.date));
-        activities = [...sortedNotes.slice(0, 3).map((n) => ({ date: n.date, title: n.title, type: "note" }))];
+        const sortedNotes = JSON.parse(storedNotes).sort((a, b) =>
+          b.date.localeCompare(a.date)
+        );
+        activities = [
+          ...sortedNotes
+            .slice(0, 3)
+            .map((n) => ({ date: n.date, title: n.title, type: "note" })),
+        ];
       }
       if (storedBooks) {
         const recentRead = JSON.parse(storedBooks)
@@ -178,7 +189,11 @@ export default function Profile() {
       if (storedBooks) {
         const arr = JSON.parse(storedBooks).filter((b) => b.rating);
         if (arr.length > 0) {
-          setAvgRating((arr.reduce((a, b) => a + (Number(b.rating) || 0), 0) / arr.length).toFixed(1));
+          setAvgRating(
+            (
+              arr.reduce((a, b) => a + (Number(b.rating) || 0), 0) / arr.length
+            ).toFixed(1)
+          );
         } else setAvgRating(0);
       }
 
@@ -186,24 +201,45 @@ export default function Profile() {
       const y = new Date().getFullYear();
       const m = String(new Date().getMonth() + 1).padStart(2, "0");
       const books = JSON.parse(localStorage.getItem("bookshelf_books") || "[]");
-      const booksThisYear = books.filter(b => b.date && b.date.startsWith(`${y}`)).length;
-      const booksThisMonth = books.filter(b => b.date && b.date.startsWith(`${y}-${m}`)).length;
-      const monthlyGoal = Number(localStorage.getItem("bookshelf_monthlyGoal")) || 15;
-      const yearlyGoal = Number(localStorage.getItem("bookshelf_yearlyGoal")) || 50;
+      const booksThisYear = books.filter(
+        (b) => b.date && b.date.startsWith(`${y}`)
+      ).length;
+      const booksThisMonth = books.filter(
+        (b) => b.date && b.date.startsWith(`${y}-${m}`)
+      ).length;
+      const monthlyGoal =
+        Number(localStorage.getItem("bookshelf_monthlyGoal")) || 15;
+      const yearlyGoal =
+        Number(localStorage.getItem("bookshelf_yearlyGoal")) || 50;
       if (booksThisMonth >= monthlyGoal) {
         sendGoalAchievedNotification("월간 독서", booksThisMonth, monthlyGoal);
       }
       if (booksThisYear >= yearlyGoal) {
         sendGoalAchievedNotification("연간 독서", booksThisYear, yearlyGoal);
       }
+
+      // 닉네임 불러오기
+      setNickname(localStorage.getItem("bookshelf_nickname") || "tpqls774");
+      // storage 이벤트로 닉네임 실시간 반영
+      const handleStorage = (e) => {
+        if (e.key === "bookshelf_nickname") {
+          setNickname(e.newValue || "tpqls774");
+        }
+      };
+      window.addEventListener("storage", handleStorage);
+      return () => window.removeEventListener("storage", handleStorage);
     }
   }, []);
 
   const now = new Date();
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, "0");
-  const booksThisYear = books.filter((b) => b.date && b.date.startsWith(`${y}`)).length;
-  const booksThisMonth = books.filter((b) => b.date && b.date.startsWith(`${y}-${m}`)).length;
+  const booksThisYear = books.filter(
+    (b) => b.date && b.date.startsWith(`${y}`)
+  ).length;
+  const booksThisMonth = books.filter(
+    (b) => b.date && b.date.startsWith(`${y}-${m}`)
+  ).length;
   const totalBooks = books.length;
   const completedBooks = books.filter((b) => b.status === "완독").length;
 
@@ -219,11 +255,17 @@ export default function Profile() {
         <div className="bg-white border border-gray-200 rounded-lg p-5 mb-6">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center text-2xl font-medium text-emerald-600 overflow-hidden">
-              {avatar ? <Image src={avatar} alt="avatar" width={80} height={80} /> : <span>T</span>}
+              {avatar ? (
+                <Image src={avatar} alt="avatar" width={80} height={80} />
+              ) : (
+                <span>T</span>
+              )}
             </div>
             <div className="text-center md:text-left flex-1">
               <div className="flex flex-col md:flex-row md:items-center gap-2 mb-3">
-                <h1 className="text-xl font-medium text-gray-900">{username}</h1>
+                <h1 className="text-xl font-medium text-gray-900">
+                  {nickname}
+                </h1>
               </div>
               <div className="text-sm text-gray-500 mb-4">
                 <User className="inline w-4 h-4 mr-1.5 -mt-0.5" />
@@ -255,11 +297,23 @@ export default function Profile() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-          {[{ label: "전체 도서", value: totalBooks }, { label: "올해", value: booksThisYear }, { label: "이번 달", value: booksThisMonth }, { label: "완독", value: completedBooks }, { label: "평균 별점", value: avgRating, icon: Star }].map((stat, i) => (
-            <div key={i} className="bg-white border border-gray-200 rounded-lg p-4">
-              <div className="text-xl font-medium text-gray-900 mb-1">{stat.value}</div>
+          {[
+            { label: "전체 도서", value: totalBooks },
+            { label: "올해", value: booksThisYear },
+            { label: "이번 달", value: booksThisMonth },
+            { label: "완독", value: completedBooks },
+            { label: "평균 별점", value: avgRating, icon: Star },
+          ].map((stat, i) => (
+            <div
+              key={i}
+              className="bg-white border border-gray-200 rounded-lg p-4"
+            >
+              <div className="text-xl font-medium text-gray-900 mb-1">
+                {stat.value}
+              </div>
               <div className="text-sm text-gray-500 flex items-center gap-1">
-                {stat.icon && <stat.icon className="w-4 h-4 text-gray-400" />} {stat.label}
+                {stat.icon && <stat.icon className="w-4 h-4 text-gray-400" />}{" "}
+                {stat.label}
               </div>
             </div>
           ))}
@@ -272,9 +326,22 @@ export default function Profile() {
               <h2 className="text-base font-medium text-gray-900">목표 설정</h2>
             </div>
             <form onSubmit={handleGoalSubmit} className="space-y-4">
-              {[{ label: "월간 목표", value: monthlyGoal, setValue: setMonthlyGoal }, { label: "연간 목표", value: yearlyGoal, setValue: setYearlyGoal }].map((goal, i) => (
+              {[
+                {
+                  label: "월간 목표",
+                  value: monthlyGoal,
+                  setValue: setMonthlyGoal,
+                },
+                {
+                  label: "연간 목표",
+                  value: yearlyGoal,
+                  setValue: setYearlyGoal,
+                },
+              ].map((goal, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <label className="text-sm text-gray-700 w-20">{goal.label}</label>
+                  <label className="text-sm text-gray-700 w-20">
+                    {goal.label}
+                  </label>
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
@@ -329,18 +396,26 @@ export default function Profile() {
             <div className="space-y-3">
               {recentActivity.length > 0 ? (
                 recentActivity.map((a, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={i}
+                    className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
+                  >
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2" />
                     <div>
                       <div className="text-sm text-gray-900">
-                        <span className="font-medium">{a.title}</span> {a.type === "note" ? "독서 노트 작성" : "완독"}
+                        <span className="font-medium">{a.title}</span>{" "}
+                        {a.type === "note" ? "독서 노트 작성" : "완독"}
                       </div>
-                      <div className="text-xs text-gray-500 mt-0.5">{a.date}</div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {a.date}
+                      </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-8 text-sm text-gray-500">아직 활동 내역이 없습니다</div>
+                <div className="text-center py-8 text-sm text-gray-500">
+                  아직 활동 내역이 없습니다
+                </div>
               )}
             </div>
           </div>

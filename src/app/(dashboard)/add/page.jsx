@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { sendBookAddedNotification } from "../../utils/notifications";
 
 // Google Books API 검색 함수
@@ -203,7 +203,7 @@ export default function GoogleBookSearch() {
                   </div>
                 ) : (
                   <EmptyState
-                    icon={search ? BookOpen : Search}
+                    icon={search ? Search : Search}
                     title={search ? "검색 결과가 없습니다" : "도서를 검색해보세요"}
                     description={search ? 
                       "다른 검색어로 다시 시도해보세요." :
@@ -291,7 +291,7 @@ export default function GoogleBookSearch() {
                 </div>
               ) : (
                 <EmptyState
-                  icon={BookOpen}
+                  icon={Search}
                   title="도서를 선택해주세요"
                   description={
                     search

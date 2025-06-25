@@ -11,7 +11,6 @@ import { saveInAppNotification } from "../../utils/notifications";
 export default function SettingsPage() {
   // 프로필 설정
   const [nickname, setNickname] = useState("tpqls774");
-  const [email, setEmail] = useState("user@example.com");
   const [introduction, setIntroduction] = useState("");
 
   // 알림 설정
@@ -44,6 +43,16 @@ export default function SettingsPage() {
       const storedIntro = localStorage.getItem("bookshelf_intro");
       if (storedIntro) setIntroduction(storedIntro);
 
+      // 닉네임 실시간 반영
+      const storedNickname = localStorage.getItem("bookshelf_nickname");
+      if (storedNickname) setNickname(storedNickname);
+      const handleStorage = (e) => {
+        if (e.key === "bookshelf_nickname") {
+          setNickname(e.newValue || "tpqls774");
+        }
+      };
+      window.addEventListener("storage", handleStorage);
+
       // 알림 설정
       const storedNotifications = localStorage.getItem(
         "bookshelf_notifications"
@@ -69,6 +78,8 @@ export default function SettingsPage() {
         notes: notes ? JSON.parse(notes).length : 0,
         lastBackup: localStorage.getItem("bookshelf_last_backup") || "없음",
       });
+
+      return () => window.removeEventListener("storage", handleStorage);
     }
   }, []);
 
@@ -106,10 +117,12 @@ export default function SettingsPage() {
               <input
                 type="text"
                 value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
+                onChange={(e) => {
+                  setNickname(e.target.value);
+                  localStorage.setItem("bookshelf_nickname", e.target.value);
+                }}
                 className="w-full h-10 px-3 text-sm border border-gray-200 rounded-lg
                   focus:outline-none focus:border-emerald-500"
-                disabled
               />
             </div>
 

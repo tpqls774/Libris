@@ -27,6 +27,20 @@ function findReadingBook(books) {
 export default function Sidebar() {
   const [readingBook, setReadingBook] = useState(null);
   const [now, setNow] = useState("");
+  const [nickname, setNickname] = useState("tpqls774");
+
+  // 닉네임 불러오기 및 실시간 반영
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setNickname(localStorage.getItem("bookshelf_nickname") || "tpqls774");
+    const handleStorage = (e) => {
+      if (e.key === "bookshelf_nickname") {
+        setNickname(e.newValue || "tpqls774");
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   // 시계 갱신
   useEffect(() => {
@@ -116,7 +130,7 @@ export default function Sidebar() {
             <User className="w-5 h-5 text-emerald-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-gray-900">@tpqls774</div>
+            <div className="text-sm font-medium text-gray-900">@{nickname}</div>
             <div className="flex items-center gap-1.5 text-xs text-gray-500">
               <Clock className="w-3.5 h-3.5" />
               <span className="font-medium">{now}</span>
