@@ -54,6 +54,11 @@ function useTodayBook() {
             /[가-힣]/.test(v.publisher || "")
           );
         });
+        koreanBooks.sort((a, b) => {
+          const tA = a.volumeInfo.title || "";
+          const tB = b.volumeInfo.title || "";
+          return tA.localeCompare(tB);
+        });
         if (koreanBooks.length > 0) {
           const bookIdx = Math.floor(
             seededRandom(seed + 1) * koreanBooks.length
