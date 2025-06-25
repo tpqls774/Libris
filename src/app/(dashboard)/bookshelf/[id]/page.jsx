@@ -3,23 +3,16 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import {
-  BookOpen,
-  Star,
-  Tag,
-  Link as LinkIcon,
-  Repeat,
-  Trash,
-  Plus,
-} from "lucide-react";
+import { Star, Trash } from "lucide-react";
 
+// STATUS_OPTIONS: 책의 상태별 옵션(읽을 예정, 읽는 중, 완독)
 const STATUS_OPTIONS = [
   { value: "읽을 예정", color: "#a5b4fc" },
   { value: "읽는 중", color: "#fbbf24" },
   { value: "완독", color: "#10b981" },
 ];
 
-// 샘플 데이터 (최초 1회 localStorage에 없을 때만 사용)
+// 샘플 데이터: localStorage에 데이터가 없을 때 최초 1회 사용되는 예시 책 목록
 const sampleBooks = [
   {
     id: 1,
@@ -27,17 +20,6 @@ const sampleBooks = [
     author: "앙투안 드 생텍쥐페리",
     cover: "/file.svg",
     review: "가장 중요한 것은 눈에 보이지 않아.",
-    date: "2024-05-01",
-    genre: "소설",
-    status: "완독",
-    summary:
-      "어린 왕자가 여러 행성을 여행하며 만난 어른들의 모습을 통해 삶의 본질과 사랑, 우정의 소중함을 일깨우는 이야기.",
-    publisher: "문학동네",
-    year: 2015,
-    isbn: "978-89-546-3053-9",
-    pageCount: 180,
-    rating: 4.5,
-    quotes: ["가장 중요한 것은 눈에 보이지 않아.", "어른들은 숫자를 좋아해."],
     date: "2024-05-01",
     genre: "소설",
     status: "완독",
@@ -104,6 +86,7 @@ const sampleBooks = [
   },
 ];
 
+// 오늘 날짜를 yyyy-mm-dd 형식으로 반환하는 함수
 function getToday() {
   const d = new Date();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -111,40 +94,52 @@ function getToday() {
   return `${d.getFullYear()}-${mm}-${dd}`;
 }
 
+// BookDetail 컴포넌트: 개별 책의 상세 정보와 리뷰, 인상 깊은 구절, 별점, 상태 변경 등 다양한 기능을 제공합니다.
 export default function BookDetail() {
+  // URL 파라미터에서 책 id 추출
   const params = useParams();
   const bookId = Number(params.id);
+  // 책 정보 상태
   const [book, setBook] = useState(null);
+  // 책을 찾지 못했을 때 상태
   const [notFound, setNotFound] = useState(false);
 
   // 감상 입력 상태
   const [review, setReview] = useState("");
+  // 감상 편집 모드 여부
   const [editMode, setEditMode] = useState(false);
+  // 감상 저장 완료 여부
   const [saved, setSaved] = useState(false);
-  // 인상 깊은 구절 상태
+  // 인상 깊은 구절 목록
   const [quotes, setQuotes] = useState([]);
+  // 새 구절 입력값
   const [newQuote, setNewQuote] = useState("");
+  // 구절 저장 완료 여부
   const [quoteSaved, setQuoteSaved] = useState(false);
+  // 구절 입력창 표시 여부
   const [showQuoteInput, setShowQuoteInput] = useState(false);
 
   // 별점 상태
   const [rating, setRating] = useState(0);
+  // 별점 마우스 오버 상태
   const [hoverRating, setHoverRating] = useState(null);
 
-  // 상태 변경
+  // 책 상태(읽을 예정/읽는 중/완독)
   const [status, setStatus] = useState("");
+  // 상태 변경 이력
   const [statusHistory, setStatusHistory] = useState([]);
 
-  // 읽기 시간 입력 상태
+  // 독서 시간 입력 상태
   const [readingTime, setReadingTime] = useState({
     startDate: "",
     endDate: "",
     totalHours: 0,
-    totalMinutes: 0
+    totalMinutes: 0,
   });
+  // 독서 시간 입력창 표시 여부
   const [showTimeInput, setShowTimeInput] = useState(false);
 
-  // 실제 데이터 가져오기 (localStorage > 샘플)
+  // 실제 데이터 불러오기: localStorage에 있으면 그 데이터, 없으면 샘플 데이터 사용
   useEffect(() => {
     if (typeof window === "undefined") return;
     let loadedBooks = [];
@@ -155,6 +150,7 @@ export default function BookDetail() {
       loadedBooks = sampleBooks;
       localStorage.setItem("bookshelf_books", JSON.stringify(sampleBooks));
     }
+    // 현재 id에 해당하는 책 찾기
     const found = loadedBooks.find((b) => Number(b.id) === bookId);
     if (found) {
       setBook(found);
@@ -163,12 +159,14 @@ export default function BookDetail() {
       setRating(found.rating || 0);
       setStatus(found.status || "읽을 예정");
       setStatusHistory(found.statusHistory || []);
-      setReadingTime(found.readingTime || {
-        startDate: "",
-        endDate: "",
-        totalHours: 0,
-        totalMinutes: 0
-      });
+      setReadingTime(
+        found.readingTime || {
+          startDate: "",
+          endDate: "",
+          totalHours: 0,
+          totalMinutes: 0,
+        }
+      );
       setEditMode(!found.review);
       setNotFound(false);
     } else {
@@ -177,7 +175,7 @@ export default function BookDetail() {
     }
   }, [bookId]);
 
-  // 별점 저장 (localStorage에 반영)
+  // 별점 저장: localStorage에 반영
   function handleSetRating(val) {
     setRating(val);
     if (typeof window !== "undefined" && book) {
@@ -191,7 +189,7 @@ export default function BookDetail() {
     }
   }
 
-  // 상태 변경
+  // 책 상태 변경 핸들러
   function handleStatusChange(e) {
     const newStatus = e.target.value;
     setStatus(newStatus);
@@ -582,9 +580,7 @@ export default function BookDetail() {
             {/* 걸린 시간 */}
             <div className="bg-white border border-gray-200 rounded-lg p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-medium text-gray-900">
-                  걸린 시간
-                </h2>
+                <h2 className="text-sm font-medium text-gray-900">걸린 시간</h2>
                 <button
                   onClick={() => setShowTimeInput((v) => !v)}
                   className="text-sm text-emerald-600 hover:text-emerald-700"
@@ -603,7 +599,12 @@ export default function BookDetail() {
                       <input
                         type="date"
                         value={readingTime.startDate}
-                        onChange={(e) => setReadingTime(prev => ({ ...prev, startDate: e.target.value }))}
+                        onChange={(e) =>
+                          setReadingTime((prev) => ({
+                            ...prev,
+                            startDate: e.target.value,
+                          }))
+                        }
                         className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500"
                       />
                     </div>
@@ -614,7 +615,12 @@ export default function BookDetail() {
                       <input
                         type="date"
                         value={readingTime.endDate}
-                        onChange={(e) => setReadingTime(prev => ({ ...prev, endDate: e.target.value }))}
+                        onChange={(e) =>
+                          setReadingTime((prev) => ({
+                            ...prev,
+                            endDate: e.target.value,
+                          }))
+                        }
                         className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500"
                       />
                     </div>
@@ -628,7 +634,12 @@ export default function BookDetail() {
                         type="number"
                         min="0"
                         value={readingTime.totalHours}
-                        onChange={(e) => setReadingTime(prev => ({ ...prev, totalHours: parseInt(e.target.value) || 0 }))}
+                        onChange={(e) =>
+                          setReadingTime((prev) => ({
+                            ...prev,
+                            totalHours: parseInt(e.target.value) || 0,
+                          }))
+                        }
                         className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500"
                       />
                     </div>
@@ -641,7 +652,12 @@ export default function BookDetail() {
                         min="0"
                         max="59"
                         value={readingTime.totalMinutes}
-                        onChange={(e) => setReadingTime(prev => ({ ...prev, totalMinutes: parseInt(e.target.value) || 0 }))}
+                        onChange={(e) =>
+                          setReadingTime((prev) => ({
+                            ...prev,
+                            totalMinutes: parseInt(e.target.value) || 0,
+                          }))
+                        }
                         className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500"
                       />
                     </div>
@@ -659,19 +675,25 @@ export default function BookDetail() {
                 <div className="space-y-2">
                   {readingTime.startDate && readingTime.endDate ? (
                     <div className="text-sm text-gray-600">
-                      <span className="font-medium">기간:</span> {readingTime.startDate} ~ {readingTime.endDate}
+                      <span className="font-medium">기간:</span>{" "}
+                      {readingTime.startDate} ~ {readingTime.endDate}
                     </div>
                   ) : null}
-                  {(readingTime.totalHours > 0 || readingTime.totalMinutes > 0) ? (
+                  {readingTime.totalHours > 0 ||
+                  readingTime.totalMinutes > 0 ? (
                     <div className="text-sm text-gray-600">
-                      <span className="font-medium">총 시간:</span> {readingTime.totalHours}시간 {readingTime.totalMinutes}분
+                      <span className="font-medium">총 시간:</span>{" "}
+                      {readingTime.totalHours}시간 {readingTime.totalMinutes}분
                     </div>
                   ) : null}
-                  {!readingTime.startDate && !readingTime.endDate && readingTime.totalHours === 0 && readingTime.totalMinutes === 0 && (
-                    <p className="text-center py-4 text-sm text-gray-400">
-                      아직 읽기 시간을 입력하지 않았습니다
-                    </p>
-                  )}
+                  {!readingTime.startDate &&
+                    !readingTime.endDate &&
+                    readingTime.totalHours === 0 &&
+                    readingTime.totalMinutes === 0 && (
+                      <p className="text-center py-4 text-sm text-gray-400">
+                        아직 읽기 시간을 입력하지 않았습니다
+                      </p>
+                    )}
                 </div>
               )}
             </div>

@@ -33,7 +33,9 @@ html {
   background: var(--background);
 }
 
-input, textarea, button {
+input,
+textarea,
+button {
   font-family: inherit;
   font-size: inherit;
 }
@@ -44,7 +46,8 @@ input, textarea, button {
   border-radius: 0.5rem;
 }
 
-input, textarea {
+input,
+textarea {
   color: var(--foreground);
 }
 

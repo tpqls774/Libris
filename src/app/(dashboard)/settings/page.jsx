@@ -1,19 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  User,
-  Bell,
-} from "lucide-react";
+import { User, Bell } from "lucide-react";
 import { requestNotificationPermission } from "../../utils/notifications";
 import { saveInAppNotification } from "../../utils/notifications";
 
+// SettingsPage 컴포넌트: 프로필, 알림, 데이터 관리 등 사용자 설정을 담당합니다.
 export default function SettingsPage() {
-  // 프로필 설정
+  // 프로필 설정: 닉네임, 자기소개
   const [nickname, setNickname] = useState("tpqls774");
   const [introduction, setIntroduction] = useState("");
 
-  // 알림 설정
+  // 알림 설정: 각종 알림 항목의 on/off 상태
   const [notifications, setNotifications] = useState({
     emailNotifications: true,
     monthlyReport: true,
@@ -24,19 +22,17 @@ export default function SettingsPage() {
   });
 
   // 브라우저 알림 권한 상태
-  const [notificationPermission, setNotificationPermission] = useState("default");
+  const [notificationPermission, setNotificationPermission] =
+    useState("default");
 
-  // 테마 설정
-  const [theme, setTheme] = useState("light");
-
-  // 데이터 관리
+  // 데이터 통계: 책/노트 개수, 마지막 백업일 등
   const [dataStats, setDataStats] = useState({
     books: 0,
     notes: 0,
     lastBackup: "",
   });
 
-  // 초기 데이터 로드
+  // 컴포넌트 마운트 시 localStorage에서 설정 데이터 불러오기
   useEffect(() => {
     if (typeof window !== "undefined") {
       // 프로필 데이터
@@ -53,7 +49,7 @@ export default function SettingsPage() {
       };
       window.addEventListener("storage", handleStorage);
 
-      // 알림 설정
+      // 알림 설정 데이터
       const storedNotifications = localStorage.getItem(
         "bookshelf_notifications"
       );
@@ -61,16 +57,16 @@ export default function SettingsPage() {
         setNotifications(JSON.parse(storedNotifications));
       }
 
-      // 브라우저 알림 권한 상태 확인
-      if ('Notification' in window) {
+      // 브라우저 알림 권한 확인
+      if ("Notification" in window) {
         setNotificationPermission(Notification.permission);
       }
 
-      // 테마 설정
+      // 테마 설정 (예시)
       const storedTheme = localStorage.getItem("bookshelf_theme");
       if (storedTheme) setTheme(storedTheme);
 
-      // 데이터 통계
+      // 데이터 통계: 책/노트 개수, 마지막 백업일
       const books = localStorage.getItem("bookshelf_books");
       const notes = localStorage.getItem("bookshelf_notes");
       setDataStats({
@@ -83,7 +79,7 @@ export default function SettingsPage() {
     }
   }, []);
 
-  // 설정 저장 핸들러
+  // 설정 저장 핸들러: localStorage에 key-value로 저장
   const handleSettingsSave = (key, value) => {
     localStorage.setItem(
       `bookshelf_${key}`,
@@ -91,7 +87,7 @@ export default function SettingsPage() {
     );
   };
 
-  // 브라우저 알림 권한 요청
+  // 브라우저 알림 권한 요청 핸들러
   const handleRequestNotificationPermission = async () => {
     const granted = await requestNotificationPermission();
     if (granted) {
@@ -102,7 +98,7 @@ export default function SettingsPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="p-6">
-        {/* 프로필 설정 */}
+        {/* 프로필 설정 섹션 */}
         <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
           <div className="flex items-center gap-2 mb-4">
             <User className="w-5 h-5 text-gray-400" />
@@ -145,7 +141,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* 알림 설정 */}
+        {/* 알림 설정 섹션 */}
         <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -172,11 +168,31 @@ export default function SettingsPage() {
 
           <div className="space-y-3">
             {[
-              { key: "bookAdded", label: "책 추가 알림", description: "새 책이 추가될 때 알림" },
-              { key: "goalAchieved", label: "목표 달성 알림", description: "독서 목표를 달성했을 때 알림" },
-              { key: "readingStreak", label: "독서 스트릭 알림", description: "연속 독서 기록 달성 시 알림" },
-              { key: "monthlyReport", label: "월간 독서 리포트", description: "매월 독서 통계 리포트" },
-              { key: "goalReminder", label: "목표 리마인더", description: "독서 목표 달성 임박 시 알림" },
+              {
+                key: "bookAdded",
+                label: "책 추가 알림",
+                description: "새 책이 추가될 때 알림",
+              },
+              {
+                key: "goalAchieved",
+                label: "목표 달성 알림",
+                description: "독서 목표를 달성했을 때 알림",
+              },
+              {
+                key: "readingStreak",
+                label: "독서 스트릭 알림",
+                description: "연속 독서 기록 달성 시 알림",
+              },
+              {
+                key: "monthlyReport",
+                label: "월간 독서 리포트",
+                description: "매월 독서 통계 리포트",
+              },
+              {
+                key: "goalReminder",
+                label: "목표 리마인더",
+                description: "독서 목표 달성 임박 시 알림",
+              },
             ].map((setting) => (
               <div
                 key={setting.key}
@@ -184,9 +200,13 @@ export default function SettingsPage() {
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700">{setting.label}</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      {setting.label}
+                    </span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-0.5">{setting.description}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {setting.description}
+                  </p>
                 </div>
                 <button
                   onClick={() => {
@@ -226,11 +246,17 @@ export default function SettingsPage() {
           </div>
           <p className="text-sm text-gray-600 mb-4">
             모든 독서 데이터(책장, 감상문, 설정 등)를 완전히 삭제합니다. <br />
-            <span className="text-red-500 font-semibold">이 작업은 되돌릴 수 없습니다!</span>
+            <span className="text-red-500 font-semibold">
+              이 작업은 되돌릴 수 없습니다!
+            </span>
           </p>
           <button
             onClick={() => {
-              if (window.confirm("정말로 모든 데이터를 삭제하고 초기화하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) {
+              if (
+                window.confirm(
+                  "정말로 모든 데이터를 삭제하고 초기화하시겠습니까?\n이 작업은 되돌릴 수 없습니다."
+                )
+              ) {
                 // 관련 localStorage 키 삭제
                 [
                   "bookshelf_books",
@@ -241,8 +267,8 @@ export default function SettingsPage() {
                   "bookshelf_notifications",
                   "bookshelf_theme",
                   "bookshelf_last_backup",
-                  "bookshelf_inapp_notifications"
-                ].forEach(key => localStorage.removeItem(key));
+                  "bookshelf_inapp_notifications",
+                ].forEach((key) => localStorage.removeItem(key));
                 saveInAppNotification({
                   type: "reset",
                   title: "계정 초기화 완료",

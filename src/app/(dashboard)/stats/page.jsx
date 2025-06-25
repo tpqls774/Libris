@@ -31,13 +31,17 @@ import {
 } from "lucide-react";
 import { sendGoalAchievedNotification } from "../../utils/notifications";
 
+// ReadingStatsDashboard 컴포넌트: 연간 독서 통계, 목표 진행률, 차트, 최근 도서 등 다양한 독서 데이터를 시각화합니다.
 export default function ReadingStatsDashboard() {
+  // 현재 선택된 탭 상태 (개요/차트/최근 도서)
   const [activeTab, setActiveTab] = useState("overview");
 
-  // 실제 데이터 상태
+  // 실제 책 데이터 상태
   const [books, setBooks] = useState([]);
+  // 연간 목표 도서 수 상태
   const [goalBooks, setGoalBooks] = useState(50);
 
+  // 컴포넌트 마운트 시 localStorage에서 데이터 불러오기
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedBooks = localStorage.getItem("bookshelf_books");
@@ -46,26 +50,32 @@ export default function ReadingStatsDashboard() {
     }
   }, []);
 
-  // 올해 완독 책만
+  // 올해 완독한 책만 필터링
   const now = new Date();
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, "0");
-  const booksThisYear = books.filter(b => b.date && b.date.startsWith(`${y}`) && b.status === "완독");
+  const booksThisYear = books.filter(
+    (b) => b.date && b.date.startsWith(`${y}`) && b.status === "완독"
+  );
+  // 올해 완독한 책 수
   const totalBooks = booksThisYear.length;
+  // 목표 대비 진행률(%)
   const progressPercentage = Math.round((totalBooks / goalBooks) * 100);
 
-  // 목표 달성 알림 체크
+  // 목표 달성 시 알림 전송 (최초 1회만)
   useEffect(() => {
     if (totalBooks > 0 && totalBooks === goalBooks) {
-      // 목표 달성 시 알림 발송
+      // 목표 달성 시 알림 전송
       sendGoalAchievedNotification("연간 독서", totalBooks, goalBooks);
     }
   }, [totalBooks, goalBooks]);
 
-  // 월별 독서량(완독)
+  // 월별 완독/페이지 수 데이터 생성
   const monthlyData = Array.from({ length: 12 }, (_, i) => {
     const month = String(i + 1).padStart(2, "0");
-    const monthBooks = booksThisYear.filter(b => b.date && b.date.startsWith(`${y}-${month}`));
+    const monthBooks = booksThisYear.filter(
+      (b) => b.date && b.date.startsWith(`${y}-${month}`)
+    );
     const pages = monthBooks.reduce((sum, b) => sum + (b.pageCount || 0), 0);
     return {
       month: `${i + 1}월`,
@@ -73,21 +83,24 @@ export default function ReadingStatsDashboard() {
       pages,
     };
   });
+  // 올해 총 페이지 수
   const totalPages = monthlyData.reduce((sum, month) => sum + month.pages, 0);
+  // 책 1권당 평균 페이지 수
   const avgPagesPerBook = Math.round(totalPages / (totalBooks || 1));
 
-  // 총 독서 시간 계산
+  // 총 독서 시간(분) 계산
   const totalReadingTime = booksThisYear.reduce((sum, b) => {
     const hours = b.readingTime?.totalHours || 0;
     const minutes = b.readingTime?.totalMinutes || 0;
     return sum + (hours * 60 + minutes);
   }, 0);
+  // 총 독서 시간(시/분)
   const totalHours = Math.floor(totalReadingTime / 60);
   const totalMinutes = totalReadingTime % 60;
 
-  // 장르별 분포
+  // 장르별 분포 데이터 생성
   const genreMap = {};
-  booksThisYear.forEach(b => {
+  booksThisYear.forEach((b) => {
     const genre = b.genre || "기타";
     genreMap[genre] = (genreMap[genre] || 0) + 1;
   });
@@ -101,34 +114,35 @@ export default function ReadingStatsDashboard() {
   const recentBooks = booksThisYear
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
     .slice(0, 4)
-    .map(b => ({
+    .map((b) => ({
       title: b.title,
       author: b.author,
       rating: b.rating || 0,
       date: b.date,
     }));
 
-  // 주간 독서 시간(실제 입력된 시간 기준)
+  // 요일별 독서 시간 데이터 생성
   const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
   const weeklyReadingTime = weekDays.map((day, idx) => {
-    const dayBooks = booksThisYear.filter(b => {
+    const dayBooks = booksThisYear.filter((b) => {
       if (!b.readingTime || !b.readingTime.endDate) return false;
       const d = new Date(b.readingTime.endDate);
       return d.getDay() === idx;
     });
-    
+
     const totalMinutes = dayBooks.reduce((sum, b) => {
       const hours = b.readingTime?.totalHours || 0;
       const minutes = b.readingTime?.totalMinutes || 0;
       return sum + (hours * 60 + minutes);
     }, 0);
-    
+
     return {
       day,
-      time: totalMinutes
+      time: totalMinutes,
     };
   });
 
+  // 커스텀 툴팁: 차트에서 마우스 오버 시 상세 정보 표시
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -155,6 +169,7 @@ export default function ReadingStatsDashboard() {
     return null;
   };
 
+  // 별점 렌더링 함수
   const renderStars = (rating) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
@@ -170,8 +185,7 @@ export default function ReadingStatsDashboard() {
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="p-6">
-
-        {/* 탭 네비게이션 */}
+        {/* 탭 네비게이션: 개요/차트/최근 도서 */}
         <div className="bg-white rounded-lg border border-gray-200 p-1.5 inline-flex gap-1 mb-6">
           {[
             { key: "overview", label: "개요", icon: Book },
@@ -254,20 +268,30 @@ export default function ReadingStatsDashboard() {
               <div className="bg-white rounded-lg border border-gray-200 p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <BookOpen className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm text-gray-500">평균 독서시간/책</span>
+                  <span className="text-sm text-gray-500">
+                    평균 독서시간/책
+                  </span>
                 </div>
                 <div className="text-2xl font-medium text-gray-900">
-                  {totalBooks > 0 ? Math.round(totalReadingTime / totalBooks) : 0}분
+                  {totalBooks > 0
+                    ? Math.round(totalReadingTime / totalBooks)
+                    : 0}
+                  분
                 </div>
               </div>
 
               <div className="bg-white rounded-lg border border-gray-200 p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <TrendingUp className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm text-gray-500">페이지당 독서시간</span>
+                  <span className="text-sm text-gray-500">
+                    페이지당 독서시간
+                  </span>
                 </div>
                 <div className="text-2xl font-medium text-gray-900">
-                  {totalPages > 0 ? (totalReadingTime / totalPages).toFixed(1) : 0}분
+                  {totalPages > 0
+                    ? (totalReadingTime / totalPages).toFixed(1)
+                    : 0}
+                  분
                 </div>
               </div>
             </div>

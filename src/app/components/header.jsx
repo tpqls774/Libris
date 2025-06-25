@@ -1,6 +1,6 @@
 "use client";
 
-import { Library, Bell, User, Check, Trash2 } from "lucide-react";
+import { Library, Bell, User, Check } from "lucide-react";
 import Link from "next/link";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { 

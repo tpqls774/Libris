@@ -1,34 +1,44 @@
-"use client"
+"use client";
 
 import { useState, useEffect } from "react";
 import { BookOpen, Search, Filter, Star, Trash2, Sparkles } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
+// NotesPage 컴포넌트: 감상문(노트) 목록, 검색, 필터, 삭제 등 전체 관리 기능을 제공합니다.
 export default function NotesPage() {
+  // 감상문(노트) 목록 상태
   const [notes, setNotes] = useState([]);
+  // 책 데이터 전체 (노트와 연결)
   const [books, setBooks] = useState([]);
+  // 검색어 상태
   const [searchTerm, setSearchTerm] = useState("");
+  // 필터 패널 열림 여부
   const [filterOpen, setFilterOpen] = useState(false);
+  // 날짜 필터 상태
   const [dateFilter, setDateFilter] = useState("전체");
+  // 별점 필터 상태
   const [ratingFilter, setRatingFilter] = useState("전체");
+  // 실제 화면에 보여줄 필터링된 노트 목록
   const [filteredNotes, setFilteredNotes] = useState([]);
+  // 삭제 중인 노트 id (로딩 표시용)
   const [deletingId, setDeletingId] = useState(null);
 
-  // 필터 옵션
+  // 필터 옵션 목록
   const dateOptions = ["전체", "이번 달", "지난 달", "올해"];
   const ratingOptions = ["전체", "5점", "4점", "3점", "2점", "1점"];
 
+  // 컴포넌트 마운트 시 localStorage에서 노트/책 데이터 불러오기
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // 책 데이터에서 review가 있는 책만 notes로 가공
+      // 책 데이터에서 review가 있는 책만 노트로 변환
       const storedBooks = localStorage.getItem("bookshelf_books");
       let notesFromBooks = [];
       if (storedBooks) {
         notesFromBooks = JSON.parse(storedBooks)
-          .filter(b => b.review && b.review.trim())
+          .filter((b) => b.review && b.review.trim())
           .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
-          .map(b => ({
+          .map((b) => ({
             id: b.id,
             title: b.title,
             date: b.date,
@@ -44,15 +54,16 @@ export default function NotesPage() {
     }
   }, []);
 
-  // 검색어와 필터 적용
+  // 검색어, 필터 변경 시 필터링된 노트 목록 갱신
   useEffect(() => {
     let filtered = notes;
 
-    // 검색어 필터링
+    // 검색어 필터링 (제목/내용)
     if (searchTerm) {
-      filtered = filtered.filter(note =>
-        note.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        note.content?.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (note) =>
+          note.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          note.content?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -62,21 +73,25 @@ export default function NotesPage() {
     const thisMonth = now.getMonth();
 
     if (dateFilter === "이번 달") {
-      filtered = filtered.filter(note => {
+      filtered = filtered.filter((note) => {
         const noteDate = new Date(note.date);
-        return noteDate.getFullYear() === thisYear &&
-               noteDate.getMonth() === thisMonth;
+        return (
+          noteDate.getFullYear() === thisYear &&
+          noteDate.getMonth() === thisMonth
+        );
       });
     } else if (dateFilter === "지난 달") {
-      filtered = filtered.filter(note => {
+      filtered = filtered.filter((note) => {
         const noteDate = new Date(note.date);
         const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
         const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
-        return noteDate.getFullYear() === lastMonthYear &&
-               noteDate.getMonth() === lastMonth;
+        return (
+          noteDate.getFullYear() === lastMonthYear &&
+          noteDate.getMonth() === lastMonth
+        );
       });
     } else if (dateFilter === "올해") {
-      filtered = filtered.filter(note => {
+      filtered = filtered.filter((note) => {
         const noteDate = new Date(note.date);
         return noteDate.getFullYear() === thisYear;
       });
@@ -85,7 +100,7 @@ export default function NotesPage() {
     // 별점 필터링
     if (ratingFilter !== "전체") {
       const rating = Number(ratingFilter.replace("점", ""));
-      filtered = filtered.filter(note => {
+      filtered = filtered.filter((note) => {
         return Number(note.rating) === rating;
       });
     }
@@ -93,22 +108,22 @@ export default function NotesPage() {
     setFilteredNotes(filtered);
   }, [searchTerm, dateFilter, ratingFilter, notes, books]);
 
-  // 노트 삭제
+  // 감상문(노트) 삭제 함수
   function handleDelete(noteId) {
     if (!window.confirm("이 감상을 삭제하시겠습니까?")) return;
 
     setDeletingId(noteId);
     setTimeout(() => {
-      const nextNotes = notes.filter(n => n.id !== noteId);
+      const nextNotes = notes.filter((n) => n.id !== noteId);
       setNotes(nextNotes);
 
       // books에서 해당 리뷰도 삭제
-      const nextBooks = books.map(b =>
+      const nextBooks = books.map((b) =>
         b.id === noteId ? { ...b, review: "" } : b
       );
 
       if (typeof window !== "undefined") {
-        // notes는 별도 보관하지 않고 books의 review에서 파생되므로 notes는 저장 X
+        // notes는 별도로 저장하지 않고 books의 review만 관리
         localStorage.setItem("bookshelf_books", JSON.stringify(nextBooks));
       }
       setBooks(nextBooks);
@@ -117,13 +132,15 @@ export default function NotesPage() {
     }, 300);
   }
 
-  // 별점 렌더링
+  // 별점 렌더링 함수
   const renderStars = (rating) => (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((n) => (
         <Star
           key={n}
-          className={`w-4 h-4 ${rating >= n ? "text-yellow-400" : "text-gray-200"}`}
+          className={`w-4 h-4 ${
+            rating >= n ? "text-yellow-400" : "text-gray-200"
+          }`}
           fill={rating >= n ? "currentColor" : "none"}
         />
       ))}
@@ -133,11 +150,13 @@ export default function NotesPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="p-6">
-        {/* 검색 섹션 */}
+        {/* 검색/필터 섹션: 감상문 검색, 필터, 필터 패널 */}
         <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
           <div className="flex items-center gap-2 mb-4">
             <BookOpen className="w-5 h-5 text-gray-400" />
-            <h2 className="text-base font-medium text-gray-900">독서 감상 목록</h2>
+            <h2 className="text-base font-medium text-gray-900">
+              독서 감상 목록
+            </h2>
           </div>
 
           <div className="flex gap-2">
@@ -147,16 +166,18 @@ export default function NotesPage() {
                   focus:outline-none focus:border-emerald-500 pr-10"
                 placeholder="제목이나 내용으로 검색"
                 value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
               <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
             </div>
             <button
-              onClick={() => setFilterOpen(v => !v)}
+              onClick={() => setFilterOpen((v) => !v)}
               className={`px-3 h-10 border rounded-lg flex items-center gap-2 transition-colors
-                ${dateFilter !== "전체" || ratingFilter !== "전체"
-                  ? "bg-emerald-50 border-emerald-200 text-emerald-600"
-                  : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+                ${
+                  dateFilter !== "전체" || ratingFilter !== "전체"
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-600"
+                    : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                }`}
             >
               <Filter className="w-4 h-4" />
               <span className="text-sm">필터</span>
@@ -166,31 +187,39 @@ export default function NotesPage() {
             </button>
           </div>
 
-          {/* 필터 패널 */}
+          {/* 필터 패널: 기간/별점 선택 */}
           {filterOpen && (
             <div className="mt-3 p-4 border border-gray-200 rounded-lg">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">기간</label>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                    기간
+                  </label>
                   <select
                     className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm bg-gray-50"
                     value={dateFilter}
-                    onChange={e => setDateFilter(e.target.value)}
+                    onChange={(e) => setDateFilter(e.target.value)}
                   >
-                    {dateOptions.map(opt => (
-                      <option key={opt} value={opt}>{opt}</option>
+                    {dateOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">별점</label>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                    별점
+                  </label>
                   <select
                     className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm bg-gray-50"
                     value={ratingFilter}
-                    onChange={e => setRatingFilter(e.target.value)}
+                    onChange={(e) => setRatingFilter(e.target.value)}
                   >
-                    {ratingOptions.map(opt => (
-                      <option key={opt} value={opt}>{opt}</option>
+                    {ratingOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -219,7 +248,7 @@ export default function NotesPage() {
         {/* 감상 목록 */}
         <div className="space-y-4">
           {filteredNotes.length > 0 ? (
-            filteredNotes.map(note => (
+            filteredNotes.map((note) => (
               <div
                 key={note.id}
                 className={`group bg-white rounded-lg border border-gray-200 p-5 transition-opacity
@@ -285,12 +314,16 @@ export default function NotesPage() {
               <div className="flex flex-col items-center justify-center text-center">
                 <BookOpen className="w-12 h-12 text-gray-300 mb-3" />
                 <h3 className="text-base font-medium text-gray-600 mb-1">
-                  {searchTerm || dateFilter !== "전체" || ratingFilter !== "전체"
+                  {searchTerm ||
+                  dateFilter !== "전체" ||
+                  ratingFilter !== "전체"
                     ? "검색 결과가 없습니다"
                     : "아직 작성한 감상이 없습니다"}
                 </h3>
                 <p className="text-sm text-gray-500">
-                  {searchTerm || dateFilter !== "전체" || ratingFilter !== "전체"
+                  {searchTerm ||
+                  dateFilter !== "전체" ||
+                  ratingFilter !== "전체"
                     ? "다른 검색어나 필터를 시도해보세요"
                     : "책을 읽고 첫 감상을 남겨보세요!"}
                 </p>
